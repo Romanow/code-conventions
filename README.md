@@ -212,16 +212,17 @@ Idea. Они имеют `Retention Policy = CLASS` и недоступны в ru
 
 1. Если Intellij Idea подсвечивает код, то его нужно исправить.
 2. Переопределенные методы всегда помечаем аннотацией `@Override`.
-3. Можно использовать `var` для описания локальных переменных.
+3. Можно использовать `var` для описания локальных переменных, если тип переменной очевиден из правого выражения. В
+   цикле всегда пишем полный тип.
    ```jshelllanguage
    var users = List.of("Alex", "Andrew", "Max", "Anton", "Gleb");
-   for (var user: users) {
+   for (final String user: users) {
        System.out.println(user);
    }
    ```
 4. Если `var` не используется, то используем `diamond operator <>`
    ```jshelllanguage
-   private Map<String, Pair<Integer, String>> ratingByUsers = new Map<>();
+   private Map<String, Pair<Integer, String>> ratingByUsers = new HashMap<>();
    ``` 
 5. Для создания список используем `List.of()`, для создания map `Map.of()`. При этом создаются readonly коллекции.
    ```jshelllanguage
@@ -245,21 +246,14 @@ Idea. Они имеют `Retention Policy = CLASS` и недоступны в ru
 14. Нельзя использовать хранимые процедуры.
 15. Строить бизнес-логику на exception можно, например, если в процессе выполнения были получены какие-то данные, работа
     с которыми невозможна.
-16. Если метод должен выполнить проверку, то лучше, чтобы он возвращал `true` / `false`, а вышестоящий код мог сам
-    решить что ему делать с этим.
-    ```jshelllanguage
-    boolean isAcceptableForUnzip(@Nonnull String str) {
-        return str.length() % 4 == 0;
-    }
-    if (!isAcceptableForUnzip(str)) {
-        throw new RuntimeException("String '" + str + "' not acceptable for unzip (size not multiple by 4)");
-    }
-    ```
-17. Если есть параметризованные сложные `SQL`, то для их построения использовать `QueryDSL` или `Criteria API`, не
+16. Если есть параметризованные сложные `SQL`, то для их построения использовать `QueryDSL` или `Criteria API`, не
     клеить их руками через конкатенацию.
-18. Контролеры максимально простые, вся бизнес логика внутри сервисов. Объекты `HttpServletRequest`,
+17. Контролеры максимально простые, вся бизнес логика внутри сервисов. Объекты `HttpServletRequest`,
     `HttpServletResponse`, `SecurityContextHolder` и т.п. могут использоваться только в слое web, а в сервисы
-    пробрасываются уже значения. В противном случае мы мешаем логику представления с бизнес-логикой.
+    пробрасываются уже результат, который мы их них получили. В противном случае мы мешаем логику представления с
+    бизнес-логикой.
+18. Если проверка валидации требует доступ к базе данных, то ее нужно переносить в слой сервисов, иначе реализовывать
+    через аннотации JSR303 или кодом в контроллере.
 19. Аннотацию `@SneakyThrows` можно использовать в тестах в любом месте.
 20. В коде можно использовать аннотацию `@SneakyThrows` только для _приватных методов_. `@SneakyThrows` нельзя
     использовать в методах, которые оборачиваются другими аннотациями Spring (например, `@Transactional`), потому что
@@ -268,9 +262,13 @@ Idea. Они имеют `Retention Policy = CLASS` и недоступны в ru
     Если требуется использовать `@SnekyThrows`, то выносим код в private метод:
     ```jshelllanguage
     @SneakyThrows
-    private URL getFileUrl(@NotNull String fileName) {
-        return new File(fileName).toURL();
+    private void deleteFile(@NotNull String path) {
+        Files.deleteIfExists(path);
     }
+    ```
+21. Не использовать `printStackTrace()`, т.к. он не попадает в лог (ELK).
+    ```jshelllanguage
+    logger.error("", e);
     ```
 
 #### Комментарии к коду
@@ -405,7 +403,7 @@ package ru.vtb.calm.empty.authorization; // OK
 ```
 
 ```java
-package ru.vtb.calm.emptyAuthorization; // OK
+package ru.vtb.calm.emptyauthorization; // OK
 ```
 
 ```java
@@ -455,7 +453,7 @@ package ru.vtb.calm.empty_authorization; // BAD
   ```jshelllanguage
   @Repository
   public class UserDaoImpl
-  extends UserDao {
+      extends UserDao {
   
       @PersistenceContext
       private final EntityManager entityManager;
@@ -463,6 +461,9 @@ package ru.vtb.calm.empty_authorization; // BAD
       ...
   }
   ```
+  Исключение: если класс является
+  расширением `JpaRepository` ([Custom Implementations for Spring Data Repositories](https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.custom-implementations))
+  , то остается суффикс `Repository`.
 
 Аннотация `@Component` является базовой и выносить ее в название класса не нужно.
 
@@ -812,6 +813,10 @@ public class Calculation {
     }
 }
 ```
+
+#### Использование `enum`
+
+TODO
 
 ## Архитектурные шаблоны
 
