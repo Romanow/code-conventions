@@ -718,11 +718,11 @@ if (log.isDebugEnabled()) {
 
 #### Правила описания моделей
 
-* В моделях, которые используются непосредственно в контроллерах, можно использовать суффиксы `Request` и `Response`.
-* Модели, являющиеся проекциями доменных сущностей, именуются как сущности без суффикса `Entity`, но, возможно, с
-  суффиксом `Response`.
-* Если модель не имеет прямое отношение к доменной сущности, то можно использовать суффиксы `Request`, `Response`,
-  `Data`, `Info`, `Item`.
+* Для каждого endpoint описывать свои модели, разделяем модели для запросов и ответов, для запросов пишем
+  суффикс `Request`.
+* Модели (не `@Entity`), являющиеся проекциями доменных сущностей, именуются как сущности, но без суффикса `Entity`.
+* Если модель не имеет прямое отношение к доменной сущности, то можно использовать суффиксы `Data`, `Info`, `Item`.
+  Суффикс `DTO` не используем.
 * Модели для запросов и ответов описываем отдельно, например:
   ```java
   @Data
@@ -738,7 +738,7 @@ if (log.isDebugEnabled()) {
   ```java
   @Data
   @Accessors(chain = true)
-  public class CalculationResponse {
+  public class Calculation {
       private UUID uid;
       private String name;
       private String description;
@@ -762,7 +762,7 @@ if (log.isDebugEnabled()) {
   представлением данных при передаче.
 * В моделях допускается inline инициализация (или в конструкторе) сложных структур
   данных `private List<String> list = new ArrayList<>()`.
-* В моделях можно использовать `@Accessors(chain = true)` для сборки через chaining.
+* Для сборки объектов использовать `@Builder`.
 * В моделях можно использовать аннотацию `@Data` для создания `equals`, `hashCode`, `toString`. Если в эти методы
   требуется внести изменения (например убрать поле из `toString`), то переопределяем их руками. Использование
   аннотаций `@EqualsAndHashCode.Exclude`, `@ToString.Exclude` ухудшает читабельность.
@@ -918,7 +918,7 @@ public class SimpleJpaRepository<T, ID>
   в `columnDefinition = "BOOLEAN NOT NULL DEFAULT false""`.
 * В entity всегда руками описывать `equals`, `hashCode`, `toString`. Использовать `@Data` в `@Entity` запрещено.
   Аналогично моделям используем `EqualsBuilder`, `HashCodeBuilder`, `ToStringBuilder` Apache Commons Lang 3.
-* В `@Entity` можно использовать аннотации `@Getter`, `@Setter`, `@Accessors(chain = true)`.
+* В `@Entity` можно использовать аннотации `@Getter`, `@Setter`, сборка сущности через `@Builder`.
 * Если `@Entity` ссылается на другую сущность, то в `@JoinColumn` всегда описываем имя колонки (`name`), которая
   ссылается на другую таблицу и `@ForeignKey` с именем constraint, совпадающим с DDL.
   ```jshelllanguage
