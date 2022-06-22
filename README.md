@@ -4,9 +4,9 @@
 
 За основу разметки в коде берем [Google Java Code Style](https://google.github.io/styleguide/javaguide.html).
 
-Описание [Google Style Guide for Intellij Idea](https://github.com/google/styleguide/blob/gh-pages/intellij-java-google-style.xml)
-кладем в папку `.idea/codeStyle/intellij-java-google-style.xml` и там же рядом создаем файл `codeStyleConfig.xml`, чтобы
-Code Style использовался из проекта:
+Описание [Code Style](.idea/codeStyles/Project.xml)
+кладем в папку `.idea/codeStyle/Project.xml` и там же рядом создаем
+файл [`codeStyleConfig.xml`](.idea/codeStyles/codeStyleConfig.xml), чтобы Code Style использовался из проекта:
 
 ```xml
 
@@ -17,19 +17,8 @@ Code Style использовался из проекта:
 </component>
  ```
 
-Папку `.idea` убираем из `.gitignore` добавляем в индекс. В папке `.idea` есть свой `.gitignore`, где прописано, что
-user-specific файлы не попадали в git:
-
-```gitignore
-# Default ignored files
-/shelf/
-/workspace.xml
-# Datasource local storage ignored files
-/dataSources/
-/dataSources.local.xml
-# Editor-based HTTP Client requests
-/httpRequests/
-```
+Папку `.idea` убираем из `.gitignore` добавляем в индекс. В папке `.idea` есть свой [`.gitignore`](.idea/.gitignore),
+где прописано, что user-specific файлы не попадали в git.
 
 ## Соглашение по коду
 
@@ -308,7 +297,7 @@ Javadoc комментарии на каждый метод не нужны, о�
 
 @EnableWebMvc
 @Configuration
-@Profile({ "local", "docker" })
+@Profile({"local", "docker"})
 public class WebConfigurationLocal
         implements WebMvcConfigurer {
 
@@ -518,15 +507,17 @@ public interface UserRepository
 
 Использовать `nativeQuery` в репозиториях можно, но только когда запрос нельзя написать на HQL.
 
-#### Именование веток
+Если требуется делать запросы, где условия поиска зависят от входных параемтров, то использовать либо `Example<T>`, либо
+репозиторий наследовать от `JpaSpecificationExecutor<T>` и работать с Criteria API в `findAll(Specification<T> spec)`.
 
-* Как называть ветку, если работа включает несколько задач
+#### Именование веток
 
 Все commits должны ссылаться на задачу в Jira. Можно настроить `Tasks & Context` (`Tools` -> `Tasks & Context`
 -> `Configure Servers` -> `Jira`) и управлять задачами через Intellij Idea. Так же там создаются `Changelist` с именем
 задачи и при commit автоматически подставляется это описание.
 
-Ветки называть в формате Gitflow: (`feature` | `bugfix`)/<Номер задачи>. Опционально, пояснение о решаемой задаче.
+Ветки называть в формате Gitflow: (`feature` | `bugfix`)/<Номер задачи>-<пояснение>. Суффикс названия с пояснением о
+решаемой задаче очень желательно.
 
 Если в рамках ветки решается несколько связанных задач, то можно называть ветку по имени главной задачи (User Story,
 Technical Task).
@@ -641,7 +632,7 @@ internal class LogNotificationServiceTest {
         mockStatic(LoggerFactory::class.java).use {
             val logger: Logger = mock(Logger::class.java)
             it.`when`<Logger> { LoggerFactory.getLogger(any(Class::class.java)) }
-                .thenReturn(logger)
+                    .thenReturn(logger)
 
             LogNotificationService().notify(event)
             verify(logger, times(1)).info("Event: ${event.eventType}, changed fields ${event.changedFields}")
@@ -651,7 +642,7 @@ internal class LogNotificationServiceTest {
     companion object {
         @JvmStatic
         fun factory(): Stream<PersonEvent> =
-            Stream.of(PersonCreatedEvent(arrayOf()), PersonChangedEvent(arrayOf()), PersonRemovedEvent())
+                Stream.of(PersonCreatedEvent(arrayOf()), PersonChangedEvent(arrayOf()), PersonRemovedEvent())
     }
 }
 ```
@@ -678,7 +669,7 @@ log.debug("Create new CalculationEntity {}", calculation);
 ```jshelllanguage
 if (log.isDebugEnabled()) {
     log.debug("Remove temporary data for calculationUids: [{}]",
-            calculationUids.stream().map(c -> c.getUid()).collect(toList()));
+            calculations.stream().map(c -> c.getUid()).collect(toList()));
 }
 ```
 
@@ -958,7 +949,7 @@ public class CalculationVersionEntity {
   ...
 
     @Column(name = "calculation_id", updatable = false, insertable = false)
-    private CalculationEntity calculation;
+    private Long calculationId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "calculation_id", foreignKey = @ForeignKey(name = "fk_calculation_version_calculation_id"))
@@ -997,7 +988,7 @@ select cv from CalculationVersionEntity cv where cv.calculationId = :calculation
 Оставлять `FetchType.EAGER` в `@ManyToOne` можно только можно в случае, если основная сущность всегда нужна в связке с
 дочерней.
 
-Для связи `@ManyToOne` `LAZY` по дефолту, его прописывать не нужно.
+Для связи `@OneToMany` `LAZY` по дефолту, его прописывать не нужно.
 
 Для связи `@OneToOne` реализовать `LAZY` без костылей нельзя. Но обычно использование `@OneToOne` означает, что дочерняя
 сущность является частью общей сущности, что не противоречит описанному выше правилу.
@@ -1014,6 +1005,8 @@ select cv from CalculationVersionEntity cv where cv.calculationId = :calculation
 
 Подробнее в
 статье [Использование библиотеки Hibernate](https://wiki.corp.dev.vtb/pages/viewpage.action?pageId=1140483682).
+
+Пример использования [jpa-example](https://github.com/Romanow/jpa-example/).
 
 #### JPA Auditing
 
@@ -1095,7 +1088,7 @@ public class AssessmentDocumentEntity {
 * Зарезервированные слова в _HQL_ пишутся с маленькой буквы.
 * Имена баз данных, схем, таблиц и полей пишутся в snake_case.
 * Имя базы `<префикс_calm>_<название_сервиса>_<опциональный_суффикс>`. Для основной базы, то суффикс не нужен (тем более
-  если она одна). Например, для сервиса хранения результатов `calm_cash_flow_result_holder` имя базы будет:
+  если она одна). Например, для сервиса хранения результатов `calm-cash-flow-result-holder` имя базы будет:
   `calm_cash_flow_result_holder`.
 * Имя схемы `public`, `staged`. Если в одной базе несколько разнородных схем (как сейчас `sudo`, `data_preparation`,
   `incoming_document`), то `<название_сервиса>_<опциональный_суффикс>`. Суффикс нужен, если схема не основная, например:
@@ -1111,7 +1104,7 @@ CREATE SEQUENCE seq_calculation_priority AS BIGINT START WITH 1 INCREMENT BY 10;
 CREATE TABLE calculation
 (
     id                  BIGSERIAL PRIMARY KEY,
-    uid                 uuid         NOT NULL,
+    uid                 UUID         NOT NULL,
     name                VARCHAR(255) NOT NULL,
     description         VARCHAR(255),
     priority            INT          NOT NULL DEFAULT NEXTVAL('seq_calculation_priority'),
@@ -1135,10 +1128,10 @@ CREATE INDEX idx_calculation_status_history_calculation_id ON calculation_status
 
 Префиксы объектов:
 
-* `index` – idx_
-* `unique index` – ui_
-* `sequence` – seq_
-* `foreign key` – fk_
+* `index` – `idx_`;
+* `unique index` – `udx_`;
+* `sequence` – `seq_`;
+* `foreign key` – `fk_`.
 
 Для всех Foreign Key создаем индексы.
 
@@ -1178,10 +1171,10 @@ Foreign Key обязательно создавать индекс, иначе `
 CREATE TABLE calculation
 (
     id  BIGSERIAL PRIMARY KEY,
-    uid uuid NOT NULL
+    uid UUID NOT NULL
 );
 
-CREATE UNIQUE INDEX idx_calculation_uid ON calculation (uid); 
+CREATE UNIQUE INDEX udx_calculation_uid ON calculation (uid); 
 ```
 
 #### Использование профилей
@@ -1336,7 +1329,7 @@ public class ExceptionController {
 
 ```java
 
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.CONSTRUCTOR, ElementType.PARAMETER, ElementType.TYPE_USE })
+@Target({ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.CONSTRUCTOR, ElementType.PARAMETER, ElementType.TYPE_USE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface NotEmpty {
     String message() default "{javax.validation.constraints.NotEmpty.message}";
@@ -1541,20 +1534,20 @@ TODO
 ```kotlin
 @Service
 class WarehouseServiceImpl(
-    private val warehouseWebClient: WebClient
+        private val warehouseWebClient: WebClient
 ) : WarehouseService {
 
     override fun takeItem(orderUid: UUID, model: String, size: SizeChart): Optional<OrderItemResponse> {
         val request = OrderItemRequest(orderUid, model, size.name)
         return warehouseWebClient
-            .post()
-            .body(BodyInserters.fromValue(request))
-            .retrieve()
-            .onStatus({ it == NOT_FOUND }, { response -> buildEx(response) { EntityNotFoundException(it) } })
-            .onStatus({ it == CONFLICT }, { response -> buildEx(response) { ItemNotAvailableException(it) } })
-            .onStatus({ it.isError }, { response -> buildEx(response) { WarehouseProcessException(it) } })
-            .bodyToMono(OrderItemResponse::class.java)
-            .blockOptional()
+                .post()
+                .body(BodyInserters.fromValue(request))
+                .retrieve()
+                .onStatus({ it == NOT_FOUND }, { response -> buildEx(response) { EntityNotFoundException(it) } })
+                .onStatus({ it == CONFLICT }, { response -> buildEx(response) { ItemNotAvailableException(it) } })
+                .onStatus({ it.isError }, { response -> buildEx(response) { WarehouseProcessException(it) } })
+                .bodyToMono(OrderItemResponse::class.java)
+                .blockOptional()
     }
 }
 ```
