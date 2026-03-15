@@ -1,0 +1,12 @@
+title: Code Conventions
+description: Развернутые соглашения по коду для проектов на Java и Spring Boot
+author:
+  name: Romanow Alexey
+  email: romanowalex@mail.ru
+
+show_downloads: false
+remote_theme: jekyll/minima
+header_pages: [ '' ]
+
+minima:
+  skin: classic
